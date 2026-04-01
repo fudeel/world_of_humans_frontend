@@ -1,5 +1,6 @@
 // app/components/game/TargetPanel.tsx
 // Displays information about the currently selected/targeted entity.
+// The attack button is only active when the player is within range.
 
 "use client";
 
@@ -7,11 +8,12 @@ import type { WorldEntity } from "@/app/types/game";
 
 interface TargetPanelProps {
     target: WorldEntity;
+    inRange: boolean;
     onAttack: () => void;
     onDeselect: () => void;
 }
 
-export default function TargetPanel({ target, onAttack, onDeselect }: TargetPanelProps) {
+export default function TargetPanel({ target, inRange, onAttack, onDeselect }: TargetPanelProps) {
     const hpPct =
         target.health.maximum > 0
             ? (target.health.current / target.health.maximum) * 100
@@ -49,9 +51,15 @@ export default function TargetPanel({ target, onAttack, onDeselect }: TargetPane
             </div>
 
             {isMob && target.is_alive && (
-                <button className="target-panel__attack-btn" onClick={onAttack}>
-                    ⚔ Attack
-                </button>
+                inRange ? (
+                    <button className="target-panel__attack-btn" onClick={onAttack}>
+                        ⚔ Attack
+                    </button>
+                ) : (
+                    <div className="target-panel__out-of-range">
+                        Move closer to attack
+                    </div>
+                )
             )}
         </div>
     );

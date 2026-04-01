@@ -4,6 +4,7 @@
 
 "use client";
 
+import type { LatLngTuple, PointTuple } from "leaflet";
 import { CircleMarker, Tooltip } from "react-leaflet";
 import type { MapObjectData, MapObjectTypeName } from "@/app/types/game";
 import { worldToGeo } from "@/app/lib/coordinates";
@@ -29,6 +30,8 @@ const TYPE_LABELS: Record<MapObjectTypeName, string> = {
     interactable: "\u2699",
 };
 
+const TOOLTIP_OFFSET: PointTuple = [0, -8];
+
 export default function MapObjectMapMarker({
                                                object,
                                                selected,
@@ -37,12 +40,12 @@ export default function MapObjectMapMarker({
                                            }: MapObjectMapMarkerProps) {
     if (!object.active) return null;
 
-    const [lat, lng] = worldToGeo(object.position.x, object.position.y);
+    const center: LatLngTuple = worldToGeo(object.position.x, object.position.y);
     const color = TYPE_COLORS[object.object_type];
 
     return (
         <CircleMarker
-            center={[lat, lng]}
+            center={center}
             radius={selected ? 9 : 7}
             pathOptions={{
                 color: selected ? "#facc15" : inRange ? "#fff" : "#000",
@@ -60,7 +63,7 @@ export default function MapObjectMapMarker({
         >
             <Tooltip
                 direction="top"
-                offset={[0, -8]}
+                offset={TOOLTIP_OFFSET}
                 permanent={selected}
                 className="map-object-tooltip"
             >

@@ -1,16 +1,89 @@
 /* app/styles/game-map.css */
-/* Styles for the Leaflet-based game map and its custom tooltips. */
-/* Import this in app/globals.css or app/layout.tsx.               */
+/* Styles for the Leaflet-based game map.                          */
+/* Import this in app/globals.css AFTER the Tailwind import.       */
+
+/* ─────────────────────────────────────────────────────────────── */
+/* CRITICAL: Tailwind's preflight / reset CSS breaks Leaflet.      */
+/* The rules below restore Leaflet's expected behaviour.           */
+/* ─────────────────────────────────────────────────────────────── */
+
+.leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1;
+    background: #08090c !important;
+}
+
+.leaflet-container img {
+    max-width: none !important;
+    max-height: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+.leaflet-tile-pane img {
+    max-width: none !important;
+    max-height: none !important;
+    width: 256px !important;
+    height: 256px !important;
+}
+
+.leaflet-pane > svg,
+.leaflet-pane > canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
 
 /* ── Map Container ────────────────────────────────────────────── */
 
 .game-map {
-    position: absolute;
-    inset: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     z-index: 1;
 }
 
-/* Override Leaflet's default tooltip styling for game entities. */
+/* ── HUD Overlay ──────────────────────────────────────────────── */
+/* One fixed layer above the entire Leaflet stack.                 */
+/* pointer-events:none lets clicks fall through to the map;        */
+/* each child widget re-enables pointer-events on itself.          */
+
+.hud-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999999 !important;
+    pointer-events: none;
+}
+
+.hud-overlay > * {
+    pointer-events: auto;
+}
+
+/* ── Target panel out-of-range message ────────────────────────── */
+
+.target-panel__out-of-range {
+    margin-top: 0.2rem;
+    font-size: 0.7rem;
+    color: #f59e0b;
+    font-style: italic;
+}
+
+/* ── Custom tooltip styling ───────────────────────────────────── */
 
 .entity-tooltip,
 .map-object-tooltip {
@@ -28,8 +101,6 @@
 .map-object-tooltip::before {
     border-top-color: rgba(15, 17, 24, 0.92) !important;
 }
-
-/* Tone down Leaflet's default UI chrome for a game feel. */
 
 .leaflet-control-attribution {
     background: rgba(15, 17, 24, 0.6) !important;

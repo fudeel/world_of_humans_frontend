@@ -3,7 +3,8 @@
 
 "use client";
 
-import { CircleMarker, Popup, Tooltip } from "react-leaflet";
+import type { LatLngTuple, PointTuple } from "leaflet";
+import { CircleMarker, Tooltip } from "react-leaflet";
 import type { WorldEntity } from "@/app/types/game";
 import { worldToGeo } from "@/app/lib/coordinates";
 
@@ -22,6 +23,8 @@ const MOB_STATE_COLORS: Record<string, string> = {
     dead: "#374151",
 };
 
+const TOOLTIP_OFFSET: PointTuple = [0, -10];
+
 export default function EntityMapMarker({
                                             entity,
                                             selected,
@@ -29,7 +32,7 @@ export default function EntityMapMarker({
                                         }: EntityMapMarkerProps) {
     if (!entity.is_alive && !entity.is_self) return null;
 
-    const [lat, lng] = worldToGeo(entity.position.x, entity.position.y);
+    const center: LatLngTuple = worldToGeo(entity.position.x, entity.position.y);
     const isMob = !!entity.mob_name;
     const displayName = entity.mob_name ?? entity.name;
 
@@ -44,15 +47,15 @@ export default function EntityMapMarker({
         color = "#6b7280";
     }
 
-    const radius = entity.is_self ? 10 : isMob ? 7 : 8;
+    const markerRadius = entity.is_self ? 10 : isMob ? 7 : 8;
     const hpPct = entity.health.maximum > 0
         ? entity.health.current / entity.health.maximum
         : 0;
 
     return (
         <CircleMarker
-            center={[lat, lng]}
-            radius={radius}
+            center={center}
+            radius={markerRadius}
             pathOptions={{
                 color: selected ? "#facc15" : "#000",
                 weight: selected ? 3 : 1.5,
@@ -68,7 +71,7 @@ export default function EntityMapMarker({
         >
             <Tooltip
                 direction="top"
-                offset={[0, -10]}
+                offset={TOOLTIP_OFFSET}
                 permanent={entity.is_self || selected}
                 className="entity-tooltip"
             >

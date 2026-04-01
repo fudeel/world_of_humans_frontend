@@ -14,7 +14,6 @@ import TargetPanel from "@/app/components/game/TargetPanel";
 import ObjectInteractionPanel from "@/app/components/game/ObjectInteractionPanel";
 import CombatLog from "@/app/components/game/CombatLog";
 
-// Leaflet accesses `window` — must be loaded client-side only.
 const GameMap = dynamic(
     () => import("@/app/components/game/GameMap"),
     { ssr: false },
@@ -25,6 +24,9 @@ const MOVE_STEP = 8;
 
 /** Milliseconds between repeated movement while holding a key. */
 const MOVE_INTERVAL = 80;
+
+/** Must match backend CombatSystem.attack_range (world units). */
+const ATTACK_RANGE = 15;
 
 /** Euclidean distance between two 2D points. */
 function dist(a: { x: number; y: number }, b: { x: number; y: number }): number {
@@ -88,8 +90,6 @@ export default function Home() {
         let dx = 0;
         let dy = 0;
 
-        // Left/Right → longitude (x), Up/Down → latitude (y)
-        // Up increases y (moves north on map), Down decreases y (moves south)
         if (keys.has("ArrowLeft") || keys.has("a")) dx -= MOVE_STEP;
         if (keys.has("ArrowRight") || keys.has("d")) dx += MOVE_STEP;
         if (keys.has("ArrowUp") || keys.has("w")) dy += MOVE_STEP;
@@ -195,48 +195,58 @@ export default function Home() {
             ? dist(player.position, selectedObject.position) <= selectedObject.interaction_range
             : false;
 
+        const isTargetInRange = selectedEntity
+            ? dist(player.position, selectedEntity.position) <= ATTACK_RANGE
+            : false;
+
         return (
             <div className="screen screen--playing">
-                {error && (
-                    <div className="error-toast" onClick={clearError}>
-                        {error} <span className="error-toast__dismiss">✕</span>
-                    </div>
-                )}
-
+                {/* Map layer — fills viewport behind everything */}
                 <GameMap
                     player={player}
                     entities={entities}
                     mapObjects={mapObjects}
                     selectedId={selectedEntityId}
                     selectedObjectId={selectedObjectId}
-                    onMove={movePlayer}
                     onSelectEntity={setSelectedEntityId}
                     onSelectObject={setSelectedObjectId}
                 />
 
-                <PlayerHud player={player} />
+                {/* HUD overlay — single fixed layer above the map.
+                    pointer-events:none lets clicks pass through to
+                    the Leaflet map; children re-enable pointer-events. */}
+                <div className="hud-overlay">
+                    {error && (
+                        <div className="error-toast" onClick={clearError}>
+                            {error} <span className="error-toast__dismiss">✕</span>
+                        </div>
+                    )}
 
-                {selectedEntity && (
-                    <TargetPanel
-                        target={selectedEntity}
-                        onAttack={() => attackTarget(selectedEntity.entity_id)}
-                        onDeselect={() => setSelectedEntityId(null)}
-                    />
-                )}
+                    <PlayerHud player={player} />
 
-                {selectedObject && (
-                    <ObjectInteractionPanel
-                        object={selectedObject}
-                        inRange={isObjectInRange}
-                        onInteract={interactWith}
-                        onDeselect={() => setSelectedObjectId(null)}
-                    />
-                )}
+                    {selectedEntity && (
+                        <TargetPanel
+                            target={selectedEntity}
+                            inRange={isTargetInRange}
+                            onAttack={() => attackTarget(selectedEntity.entity_id)}
+                            onDeselect={() => setSelectedEntityId(null)}
+                        />
+                    )}
 
-                <CombatLog events={combatLog} playerId={player.playerId} />
+                    {selectedObject && (
+                        <ObjectInteractionPanel
+                            object={selectedObject}
+                            inRange={isObjectInRange}
+                            onInteract={interactWith}
+                            onDeselect={() => setSelectedObjectId(null)}
+                        />
+                    )}
 
-                <div className="controls-hint">
-                    Arrow keys / WASD to move · Click mob to select · Click object to interact · Click map to move
+                    <CombatLog events={combatLog} playerId={player.playerId} />
+
+                    <div className="controls-hint">
+                        Arrow keys / WASD to move · Click mob to select · Click object to interact
+                    </div>
                 </div>
             </div>
         );
