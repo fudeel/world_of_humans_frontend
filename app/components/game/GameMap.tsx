@@ -1,42 +1,38 @@
 // app/components/game/GameMap.tsx
 // Real-world Leaflet map rendering OpenStreetMap tiles with game
-// entities and map objects placed at geographic positions.
-//
-// IMPORTANT: Load with next/dynamic({ ssr: false }) because
-// Leaflet accesses `window`.
+// entities, map objects, and loot drops placed at geographic positions.
 
 "use client";
 
 import { useEffect } from "react";
 import type { LatLngTuple } from "leaflet";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
-import type { MapObjectData, WorldEntity } from "@/app/types/game";
+import type { LootDropData, MapObjectData, WorldEntity } from "@/app/types/game";
 import type { PlayerState } from "@/app/hooks/useGameState";
 import { worldToGeo, GEO_CENTER } from "@/app/lib/coordinates";
 import MapFollower from "./MapFollower";
 import MapObjectMapMarker from "./MapObjectMapMarker";
 import EntityMapMarker from "@/app/components/game/EntityMarker";
+import LootDropMarker from "./LootDropMarker";
 
 interface GameMapProps {
     player: PlayerState;
     entities: WorldEntity[];
     mapObjects: MapObjectData[];
+    lootDrops: LootDropData[];
     selectedId: string | null;
     selectedObjectId: string | null;
     onSelectEntity: (id: string | null) => void;
     onSelectObject: (id: string | null) => void;
+    onClickLootDrop: (drop: LootDropData) => void;
 }
 
-/** Euclidean distance between two 2D points in world space. */
 function dist(a: { x: number; y: number }, b: { x: number; y: number }): number {
     const dx = a.x - b.x;
     const dy = a.y - b.y;
     return Math.sqrt(dx * dx + dy * dy);
 }
 
-/**
- * Forces Leaflet to recalculate container dimensions after mount.
- */
 function MapResizer() {
     const map = useMap();
 
@@ -60,15 +56,18 @@ function MapResizer() {
 }
 
 const MAP_CENTER: LatLngTuple = [GEO_CENTER.lat, GEO_CENTER.lng];
+const LOOT_RANGE = 40;
 
 export default function GameMap({
                                     player,
                                     entities,
                                     mapObjects,
+                                    lootDrops,
                                     selectedId,
                                     selectedObjectId,
                                     onSelectEntity,
                                     onSelectObject,
+                                    onClickLootDrop,
                                 }: GameMapProps) {
     const playerGeo = worldToGeo(player.position.x, player.position.y);
 
@@ -103,9 +102,21 @@ export default function GameMap({
                         onClick={() => {
                             onSelectEntity(null);
                             onSelectObject(
-                                selectedObjectId === obj.object_id ? null : obj.object_id,
+                                selectedObjectId === obj.object_id
+                                    ? null
+                                    : obj.object_id,
                             );
                         }}
+                    />
+                ))}
+
+                {/* Loot drops on the ground */}
+                {lootDrops.map((drop) => (
+                    <LootDropMarker
+                        key={drop.drop_id}
+                        drop={drop}
+                        inRange={dist(player.position, drop.position) <= LOOT_RANGE}
+                        onClick={() => onClickLootDrop(drop)}
                     />
                 ))}
 

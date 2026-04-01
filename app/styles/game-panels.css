@@ -1,0 +1,707 @@
+/* app/styles/game-panels.css */
+/* Styles for inventory, quest, loot, and HUD button panels.       */
+
+/* ── Shared panel base ────────────────────────────────────────── */
+
+.inventory-panel,
+.quest-log-panel,
+.quest-offer-panel,
+.loot-window {
+    position: absolute;
+    background: rgba(15, 17, 24, 0.95);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+}
+
+/* ── HUD Buttons ──────────────────────────────────────────────── */
+
+.hud-buttons {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 15;
+}
+
+.hud-buttons__btn {
+    background: rgba(15, 17, 24, 0.92);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem 0.9rem;
+    color: var(--text-primary);
+    font-size: 0.75rem;
+    font-family: var(--font-display);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.15s;
+}
+
+.hud-buttons__btn:hover {
+    border-color: var(--gold-dim);
+    color: var(--gold);
+}
+
+.hud-buttons__icon {
+    font-size: 1rem;
+}
+
+.hud-buttons__label {
+    font-weight: 600;
+}
+
+.hud-buttons__badge {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.06);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+}
+
+.hud-buttons__badge--active {
+    color: var(--gold);
+    background: rgba(234,179,8,0.15);
+}
+
+/* ── Inventory Panel ──────────────────────────────────────────── */
+
+.inventory-panel {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px;
+}
+
+.inventory-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.inventory-panel__title {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--gold);
+}
+
+.inventory-panel__close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.inventory-panel__close:hover {
+    color: var(--text-primary);
+}
+
+.inventory-panel__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding: 0.8rem;
+}
+
+.inventory-panel__footer {
+    padding: 0.5rem 1rem;
+    border-top: 1px solid var(--border);
+    text-align: right;
+}
+
+/* ── Inventory Slot ───────────────────────────────────────────── */
+
+.inv-slot {
+    width: 60px;
+    height: 60px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.inv-slot--empty {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.inv-slot--occupied {
+    background: rgba(255, 255, 255, 0.06);
+    border: 2px solid;
+    cursor: default;
+}
+
+.inv-slot__icon {
+    font-size: 1.4rem;
+}
+
+.inv-slot__qty {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.inv-slot__tooltip {
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10, 12, 18, 0.97);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+    min-width: 180px;
+    z-index: 30;
+    pointer-events: none;
+}
+
+.inv-slot__tooltip-name {
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+}
+
+.inv-slot__tooltip-type {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: capitalize;
+}
+
+.inv-slot__tooltip-desc {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 0.3rem;
+    font-style: italic;
+    line-height: 1.3;
+}
+
+.inv-slot__tooltip-stats {
+    margin-top: 0.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.inv-slot__tooltip-stat {
+    font-size: 0.7rem;
+    color: #22c55e;
+}
+
+.inv-slot__tooltip-sell {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+}
+
+/* ── Currency Display ─────────────────────────────────────────── */
+
+.currency-display {
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+}
+
+.currency-display__gold {
+    color: #eab308;
+}
+
+.currency-display__silver {
+    color: #9ca3af;
+}
+
+.currency-display__copper {
+    color: #c2702a;
+}
+
+/* ── Quest Log Panel ──────────────────────────────────────────── */
+
+.quest-log-panel {
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    width: 340px;
+    max-height: 80vh;
+}
+
+.quest-log-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.quest-log-panel__title {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--gold);
+}
+
+.quest-log-panel__close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.quest-log-panel__close:hover {
+    color: var(--text-primary);
+}
+
+.quest-log-panel__body {
+    padding: 0.6rem 0.8rem;
+    overflow-y: auto;
+    max-height: calc(80vh - 50px);
+}
+
+.quest-log-panel__empty {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 1.5rem 0;
+}
+
+.quest-log-panel__section {
+    margin-bottom: 0.8rem;
+}
+
+.quest-log-panel__section-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.4rem;
+}
+
+/* ── Quest Card ───────────────────────────────────────────────── */
+
+.quest-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.quest-card--completed {
+    border-color: var(--gold-dim);
+}
+
+.quest-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+}
+
+.quest-card__title {
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.quest-card__badge {
+    font-size: 0.55rem;
+    font-weight: 700;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.quest-card__badge--done {
+    background: rgba(234,179,8,0.2);
+    color: var(--gold);
+}
+
+.quest-card__badge--turned-in {
+    background: rgba(34,197,94,0.15);
+    color: #22c55e;
+}
+
+.quest-card__objectives {
+    margin-bottom: 0.3rem;
+}
+
+.quest-card__obj {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    padding: 0.1rem 0;
+}
+
+.quest-card__obj--done {
+    color: #22c55e;
+}
+
+.quest-card__obj-check {
+    font-size: 0.7rem;
+    width: 14px;
+}
+
+.quest-card__obj-text {
+    flex: 1;
+}
+
+.quest-card__obj-count {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+
+.quest-card__reward {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+}
+
+.quest-card__actions {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+}
+
+.quest-card__btn {
+    flex: 1;
+    border: none;
+    border-radius: 4px;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.quest-card__btn--turn-in {
+    background: linear-gradient(135deg, #854d0e, #a16207);
+    color: #fde68a;
+}
+
+.quest-card__btn--turn-in:hover {
+    background: linear-gradient(135deg, #a16207, #ca8a04);
+}
+
+.quest-card__btn--abandon {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-muted);
+}
+
+.quest-card__btn--abandon:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--text-primary);
+}
+
+/* ── Quest Offer Panel ────────────────────────────────────────── */
+
+.quest-offer-panel {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 420px;
+    max-height: 80vh;
+}
+
+.quest-offer-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.quest-offer-panel__title {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--gold);
+}
+
+.quest-offer-panel__close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.quest-offer-panel__close:hover {
+    color: var(--text-primary);
+}
+
+.quest-offer-panel__tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+}
+
+.quest-offer-panel__tab {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.quest-offer-panel__tab--active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+}
+
+.quest-offer-panel__body {
+    padding: 1rem;
+    overflow-y: auto;
+    max-height: calc(80vh - 150px);
+}
+
+.quest-offer-panel__quest-title {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--gold);
+    margin: 0 0 0.6rem 0;
+}
+
+.quest-offer-panel__desc {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.quest-offer-panel__section-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.3rem;
+}
+
+.quest-offer-panel__obj {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    padding: 0.15rem 0;
+}
+
+.quest-offer-panel__objectives {
+    margin-bottom: 0.8rem;
+}
+
+.quest-offer-panel__rewards {
+    margin-bottom: 0.5rem;
+}
+
+.quest-offer-panel__reward-line {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    padding: 0.1rem 0;
+}
+
+.quest-offer-panel__empty {
+    padding: 1.5rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+}
+
+.quest-offer-panel__actions {
+    display: flex;
+    gap: 0.6rem;
+    padding: 0.8rem 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.quest-offer-panel__btn {
+    flex: 1;
+    border: none;
+    border-radius: 6px;
+    padding: 0.6rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: var(--font-display);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.quest-offer-panel__btn--accept {
+    background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+    color: #0f0f0f;
+}
+
+.quest-offer-panel__btn--accept:hover {
+    opacity: 0.9;
+}
+
+.quest-offer-panel__btn--decline {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-muted);
+}
+
+.quest-offer-panel__btn--decline:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--text-primary);
+}
+
+/* ── Loot Window ──────────────────────────────────────────────── */
+
+.loot-window {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+}
+
+.loot-window__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.loot-window__title {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gold);
+}
+
+.loot-window__close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.loot-window__close:hover {
+    color: var(--text-primary);
+}
+
+.loot-window__body {
+    padding: 0.4rem;
+}
+
+.loot-window__empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    padding: 1rem;
+}
+
+.loot-window__row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid transparent;
+    border-radius: 5px;
+    padding: 0.45rem 0.6rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+}
+
+.loot-window__row:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: var(--gold-dim);
+}
+
+.loot-window__row--money {
+    color: #eab308;
+}
+
+.loot-window__row-icon {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+
+.loot-window__row-name {
+    flex: 1;
+}
+
+.loot-window__row-action {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+/* ── Notification Toast ───────────────────────────────────────── */
+
+.notification-toast {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    background: rgba(34, 63, 25, 0.92);
+    border: 1px solid #22c55e;
+    color: #bbf7d0;
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    animation: notif-slide 0.3s ease;
+}
+
+@keyframes notif-slide {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* ── Target Panel NPC interact button ─────────────────────────── */
+
+.target-panel__interact-btn {
+    margin-top: 0.3rem;
+    background: linear-gradient(135deg, #1e3a5f, #2563eb);
+    border: 1px solid #3b82f6;
+    border-radius: 5px;
+    padding: 0.4rem 0.8rem;
+    color: #93c5fd;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.target-panel__interact-btn:hover {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+}

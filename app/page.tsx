@@ -1,7 +1,7 @@
 // app/page.tsx
 // Main entry point: connects to the Python game server via WebSocket,
 // guides the player through character creation, then renders a real
-// Leaflet map with entity interaction and arrow-key movement.
+// Leaflet map with entity interaction, loot, quests, and inventory.
 
 "use client";
 
@@ -13,22 +13,23 @@ import PlayerHud from "@/app/components/game/PlayerHud";
 import TargetPanel from "@/app/components/game/TargetPanel";
 import ObjectInteractionPanel from "@/app/components/game/ObjectInteractionPanel";
 import CombatLog from "@/app/components/game/CombatLog";
+import HudButtons from "@/app/components/game/HudButtons";
+import InventoryPanel from "@/app/components/game/InventoryPanel";
+import QuestLogPanel from "@/app/components/game/QuestLogPanel";
+import QuestOfferPanel from "@/app/components/game/QuestOfferPanel";
+import LootWindow from "@/app/components/game/LootWindow";
+import NotificationToast from "@/app/components/game/NotificationToast";
 
 const GameMap = dynamic(
     () => import("@/app/components/game/GameMap"),
     { ssr: false },
 );
 
-/** World units the player moves per arrow-key tick (~8 meters). */
 const MOVE_STEP = 8;
-
-/** Milliseconds between repeated movement while holding a key. */
 const MOVE_INTERVAL = 80;
-
-/** Must match backend CombatSystem.attack_range (world units). */
 const ATTACK_RANGE = 15;
+const NPC_INTERACT_RANGE = 50;
 
-/** Euclidean distance between two 2D points. */
 function dist(a: { x: number; y: number }, b: { x: number; y: number }): number {
     const dx = a.x - b.x;
     const dy = a.y - b.y;
@@ -43,17 +44,36 @@ export default function Home() {
         player,
         entities,
         mapObjects,
+        lootDrops,
         combatLog,
+        inventory,
+        currency,
+        questLog,
+        questOffer,
+        activeLootDrop,
         error,
+        notification,
         createCharacter,
         movePlayer,
         attackTarget,
         interactWith,
+        interactNpc,
+        acceptQuest,
+        abandonQuest,
+        turnInQuest,
+        lootItem,
+        lootMoney,
+        openLootDrop,
+        closeLootDrop,
+        closeQuestOffer,
         clearError,
+        clearNotification,
     } = useGameState();
 
     const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
     const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+    const [showInventory, setShowInventory] = useState(false);
+    const [showQuestLog, setShowQuestLog] = useState(false);
 
     const selectedEntity = entities.find(
         (e) => e.entity_id === selectedEntityId && e.is_alive
@@ -75,7 +95,7 @@ export default function Home() {
         }
     }, [selectedObjectId, selectedObject]);
 
-    /* ── Arrow-key movement ───────────────────────────────────────── */
+    /* ── Arrow-key movement + hotkeys ─────────────────────────────── */
 
     const keysRef = useRef<Set<string>>(new Set());
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -114,6 +134,26 @@ export default function Home() {
 
         const onKeyDown = (e: KeyboardEvent) => {
             const key = e.key;
+
+            // Hotkeys for panels
+            if (key === "b" || key === "B") {
+                setShowInventory((prev) => !prev);
+                return;
+            }
+            if (key === "l" || key === "L") {
+                setShowQuestLog((prev) => !prev);
+                return;
+            }
+            if (key === "Escape") {
+                setShowInventory(false);
+                setShowQuestLog(false);
+                closeLootDrop();
+                closeQuestOffer();
+                setSelectedEntityId(null);
+                setSelectedObjectId(null);
+                return;
+            }
+
             if (
                 ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
                     "w", "a", "s", "d"].includes(key)
@@ -149,7 +189,7 @@ export default function Home() {
             }
             keysRef.current.clear();
         };
-    }, [phase, processMovement]);
+    }, [phase, processMovement, closeLootDrop, closeQuestOffer]);
 
     /* ── Connecting ──────────────────────────────────────────────── */
     if (phase === "connecting") {
@@ -199,22 +239,24 @@ export default function Home() {
             ? dist(player.position, selectedEntity.position) <= ATTACK_RANGE
             : false;
 
+        const isNpcInRange = selectedEntity
+            ? dist(player.position, selectedEntity.position) <= NPC_INTERACT_RANGE
+            : false;
+
         return (
             <div className="screen screen--playing">
-                {/* Map layer — fills viewport behind everything */}
                 <GameMap
                     player={player}
                     entities={entities}
                     mapObjects={mapObjects}
+                    lootDrops={lootDrops}
                     selectedId={selectedEntityId}
                     selectedObjectId={selectedObjectId}
                     onSelectEntity={setSelectedEntityId}
                     onSelectObject={setSelectedObjectId}
+                    onClickLootDrop={openLootDrop}
                 />
 
-                {/* HUD overlay — single fixed layer above the map.
-                    pointer-events:none lets clicks pass through to
-                    the Leaflet map; children re-enable pointer-events. */}
                 <div className="hud-overlay">
                     {error && (
                         <div className="error-toast" onClick={clearError}>
@@ -222,13 +264,21 @@ export default function Home() {
                         </div>
                     )}
 
+                    {notification && (
+                        <NotificationToast
+                            message={notification}
+                            onDismiss={clearNotification}
+                        />
+                    )}
+
                     <PlayerHud player={player} />
 
                     {selectedEntity && (
                         <TargetPanel
                             target={selectedEntity}
-                            inRange={isTargetInRange}
+                            inRange={selectedEntity.is_quest_giver ? isNpcInRange : isTargetInRange}
                             onAttack={() => attackTarget(selectedEntity.entity_id)}
+                            onInteractNpc={() => interactNpc(selectedEntity.entity_id)}
                             onDeselect={() => setSelectedEntityId(null)}
                         />
                     )}
@@ -242,10 +292,59 @@ export default function Home() {
                         />
                     )}
 
+                    {/* Loot window */}
+                    {activeLootDrop && (
+                        <LootWindow
+                            drop={activeLootDrop}
+                            onLootItem={lootItem}
+                            onLootMoney={lootMoney}
+                            onClose={closeLootDrop}
+                        />
+                    )}
+
+                    {/* Quest offer from NPC */}
+                    {questOffer && (
+                        <QuestOfferPanel
+                            offer={questOffer}
+                            onAccept={acceptQuest}
+                            onClose={closeQuestOffer}
+                        />
+                    )}
+
+                    {/* Inventory panel */}
+                    {showInventory && inventory && currency && (
+                        <InventoryPanel
+                            inventory={inventory}
+                            currency={currency}
+                            onClose={() => setShowInventory(false)}
+                        />
+                    )}
+
+                    {/* Quest log panel */}
+                    {showQuestLog && questLog && (
+                        <QuestLogPanel
+                            questLog={questLog}
+                            onClose={() => setShowQuestLog(false)}
+                            onAbandon={abandonQuest}
+                            onTurnIn={turnInQuest}
+                        />
+                    )}
+
                     <CombatLog events={combatLog} playerId={player.playerId} />
 
+                    {/* HUD toolbar buttons */}
+                    <HudButtons
+                        onInventoryClick={() => setShowInventory((p) => !p)}
+                        onQuestsClick={() => setShowQuestLog((p) => !p)}
+                        inventoryUsed={inventory?.slots.filter((s) => s !== null).length ?? 0}
+                        inventoryCapacity={inventory?.capacity ?? 8}
+                        activeQuests={questLog?.entries.filter(
+                            (e) => e.status === "in_progress" || e.status === "completed"
+                        ).length ?? 0}
+                    />
+
                     <div className="controls-hint">
-                        Arrow keys / WASD to move · Click mob to select · Click object to interact
+                        WASD move · B bag · L quests · ESC close · Click mob/NPC/loot
                     </div>
                 </div>
             </div>

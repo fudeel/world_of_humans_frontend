@@ -2,6 +2,7 @@
 /* Dark fantasy theme for the World of Humans frontend. */
 
 @import "tailwindcss";
+@import "./styles/game-panels.css";
 
 :root {
   --bg-deep: #08090c;
@@ -341,17 +342,16 @@ body {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: left;
 }
 
 .class-card:hover {
   background: var(--bg-card-hover);
-  border-color: var(--border-bright);
+  border-color: var(--gold-dim);
   transform: translateY(-1px);
 }
 
@@ -362,97 +362,60 @@ body {
 }
 
 .class-card__icon {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
 }
 
 .class-card__name {
   font-family: var(--font-display);
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.class-card__description {
+.class-card__desc {
   font-size: 0.78rem;
   color: var(--text-secondary);
-  line-height: 1.45;
-  margin: 0;
+  line-height: 1.4;
 }
 
-.class-card__roles {
+.class-card__tags {
   display: flex;
-  gap: 0.4rem;
   flex-wrap: wrap;
+  gap: 0.3rem;
 }
 
-.class-card__role-tag {
+.class-card__tag {
   font-size: 0.65rem;
   padding: 0.15rem 0.5rem;
   border-radius: 3px;
-  color: #fff;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
 }
 
-.class-card__talents {
-  font-size: 0.72rem;
+.class-card__talent-trees {
+  font-size: 0.7rem;
   color: var(--text-muted);
   font-style: italic;
 }
 
-.class-card__resources {
-  display: flex;
-  gap: 0.3rem;
-}
-
-.class-card__resource-tag {
-  font-size: 0.65rem;
-  padding: 0.1rem 0.4rem;
-  border-radius: 3px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-}
-
 /* ── Name Input ───────────────────────────────────────────────── */
 
-.name-input {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.name-input__title {
-  font-family: var(--font-display);
-  font-size: 1.3rem;
-  color: var(--text-primary);
-}
-
 .name-input__summary {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  text-align: center;
 }
 
-.name-input__faction-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.name-input__separator {
-  color: var(--text-muted);
+.name-input__summary-value {
+  color: var(--gold);
+  font-weight: 600;
 }
 
 .name-input__form {
   display: flex;
   gap: 0.8rem;
-  margin-top: 0.5rem;
+  justify-content: center;
 }
 
 .name-input__field {
@@ -532,10 +495,6 @@ body {
 }
 
 /* ── Player HUD ───────────────────────────────────────────────── */
-
-.hud-overlay {
-  z-index: 9999999 !important;
-}
 
 .player-hud {
   position: absolute;
@@ -727,6 +686,107 @@ body {
   background: linear-gradient(135deg, #991b1b, #b91c1c);
 }
 
+/* ── Object Panel ─────────────────────────────────────────────── */
+
+.object-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(15, 17, 24, 0.92);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+.object-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.object-panel__icon {
+  font-size: 1rem;
+}
+
+.object-panel__name {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.object-panel__close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.object-panel__close:hover {
+  color: var(--text-primary);
+}
+
+.object-panel__type {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.object-panel__coords {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.object-panel__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+}
+
+.object-panel__meta-tag {
+  font-size: 0.65rem;
+  padding: 0.12rem 0.4rem;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.object-panel__interact-btn {
+  margin-top: 0.3rem;
+  background: linear-gradient(135deg, #1e3a5f, #2563eb);
+  border: 1px solid #3b82f6;
+  border-radius: 5px;
+  padding: 0.4rem 0.8rem;
+  color: #93c5fd;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.object-panel__interact-btn:hover {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+}
+
+.object-panel__out-of-range {
+  margin-top: 0.2rem;
+  font-size: 0.7rem;
+  color: #f59e0b;
+  font-style: italic;
+}
+
 /* ── Combat Log ───────────────────────────────────────────────── */
 
 .combat-log {
@@ -811,4 +871,10 @@ body {
   font-family: var(--font-mono);
   z-index: 10;
   pointer-events: none;
+}
+
+
+
+.hud-overlay {
+  z-index: 999999 !important;
 }

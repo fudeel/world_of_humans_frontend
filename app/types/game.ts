@@ -43,19 +43,117 @@ export type MobStateName =
     | "return_to_spawn"
     | "dead";
 
-/** Classification of placeable objects on the world map. */
 export type MapObjectTypeName =
     | "item"
     | "resource_node"
     | "npc"
     | "interactable";
 
-/** How a player engages with a map object. */
 export type InteractionTypeName =
     | "loot"
     | "gather"
     | "talk"
     | "activate";
+
+export type ItemTypeName = "weapon" | "armor" | "consumable" | "quest_item" | "junk";
+
+export type ItemSlotName = "none" | "head" | "chest" | "legs" | "feet" | "hands" | "main_hand" | "off_hand";
+
+export type QuestStatusName = "available" | "in_progress" | "completed" | "turned_in" | "failed";
+
+/** A single item definition from the server. */
+export interface ItemData {
+    item_id: string;
+    name: string;
+    item_type: ItemTypeName;
+    sell_value: number;
+    slot: ItemSlotName;
+    stat_bonuses: Record<string, number>;
+    description: string;
+    stackable: boolean;
+    max_stack: number;
+    level_req: number;
+}
+
+/** One occupied inventory slot. */
+export interface InventorySlotData {
+    item: ItemData;
+    quantity: number;
+}
+
+/** Full inventory state from the server. */
+export interface InventoryData {
+    capacity: number;
+    slots: (InventorySlotData | null)[];
+}
+
+/** Currency breakdown. */
+export interface CurrencyData {
+    total_copper: number;
+    gold: number;
+    silver: number;
+    copper: number;
+}
+
+/** A single quest objective with progress. */
+export interface QuestObjectiveProgress {
+    objective_id: string;
+    description: string;
+    target_id: string;
+    current_count: number;
+    required_count: number;
+    is_complete: boolean;
+}
+
+/** Quest reward info. */
+export interface QuestRewardData {
+    copper: number;
+    experience: number;
+    item_ids: string[];
+}
+
+/** A quest entry in the player's log. */
+export interface QuestEntryData {
+    quest_id: string;
+    title: string;
+    description: string;
+    status: QuestStatusName;
+    objectives: QuestObjectiveProgress[];
+    reward: QuestRewardData;
+}
+
+/** Full quest log state from the server. */
+export interface QuestLogData {
+    max_quests: number;
+    entries: QuestEntryData[];
+}
+
+/** Quest definition offered by an NPC. */
+export interface QuestOfferData {
+    quest_id: string;
+    title: string;
+    description: string;
+    giver_entity_id: string;
+    level_req: number;
+    objectives: {
+        objective_id: string;
+        description: string;
+        target_id: string;
+        required_count: number;
+    }[];
+    reward: QuestRewardData;
+    repeatable: boolean;
+}
+
+/** A loot drop on the ground. */
+export interface LootDropData {
+    drop_id: string;
+    mob_id: string;
+    position: { x: number; y: number };
+    items: ItemData[];
+    money: number;
+    active: boolean;
+}
 
 /** A class available during character creation. */
 export interface ClassInfo {
@@ -115,6 +213,9 @@ export interface CharacterCreatedPayload {
     zone_id: string;
     zone_name: string;
     zone_bounds: ZoneBounds;
+    inventory: InventoryData;
+    currency: CurrencyData;
+    quest_log: QuestLogData;
 }
 
 /** A single entity in the world state snapshot. */
@@ -133,6 +234,7 @@ export interface WorldEntity {
     mob_name?: string;
     mob_state?: MobStateName;
     mob_level?: number;
+    is_quest_giver?: boolean;
 }
 
 /** A non-mob object placed on the world map by the server. */
@@ -153,8 +255,10 @@ export interface WorldStatePayload {
     zone_id: string;
     entities: WorldEntity[];
     map_objects: MapObjectData[];
+    loot_drops: LootDropData[];
     player_position: { x: number; y: number } | null;
     player_health: ResourceState | null;
+    currency: CurrencyData;
 }
 
 /** Server response to an interaction attempt. */
@@ -178,6 +282,7 @@ export interface DeathPayload {
     killer_id: string;
     x: number;
     y: number;
+    loot_drop?: LootDropData | null;
 }
 
 /** Spawn event from the server. */
@@ -187,6 +292,38 @@ export interface SpawnPayload {
     x: number;
     y: number;
     zone_id: string;
+}
+
+/** Loot result from picking up an item or money. */
+export interface LootResultPayload {
+    success: boolean;
+    reason?: string;
+    item?: ItemData;
+    money_looted?: number;
+    inventory?: InventoryData;
+    currency?: CurrencyData;
+    drop?: LootDropData | null;
+}
+
+/** Quest offered by an NPC. */
+export interface QuestOfferedPayload {
+    npc_id: string;
+    quests: QuestOfferData[];
+}
+
+/** Quest accepted response. */
+export interface QuestAcceptedPayload {
+    quest: QuestEntryData;
+    quest_log: QuestLogData;
+}
+
+/** Quest turned in response. */
+export interface QuestTurnedInPayload {
+    quest_id: string;
+    reward: QuestRewardData;
+    quest_log: QuestLogData;
+    inventory: InventoryData;
+    currency: CurrencyData;
 }
 
 /** Generic WebSocket message envelope. */
