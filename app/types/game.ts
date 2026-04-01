@@ -43,6 +43,20 @@ export type MobStateName =
     | "return_to_spawn"
     | "dead";
 
+/** Classification of placeable objects on the world map. */
+export type MapObjectTypeName =
+    | "item"
+    | "resource_node"
+    | "npc"
+    | "interactable";
+
+/** How a player engages with a map object. */
+export type InteractionTypeName =
+    | "loot"
+    | "gather"
+    | "talk"
+    | "activate";
+
 /** A class available during character creation. */
 export interface ClassInfo {
     type: ClassName;
@@ -121,12 +135,33 @@ export interface WorldEntity {
     mob_level?: number;
 }
 
+/** A non-mob object placed on the world map by the server. */
+export interface MapObjectData {
+    object_id: string;
+    name: string;
+    object_type: MapObjectTypeName;
+    interaction_type: InteractionTypeName;
+    position: { x: number; y: number };
+    zone_id: string;
+    interaction_range: number;
+    active: boolean;
+    metadata: Record<string, unknown>;
+}
+
 /** Periodic world state broadcast. */
 export interface WorldStatePayload {
     zone_id: string;
     entities: WorldEntity[];
+    map_objects: MapObjectData[];
     player_position: { x: number; y: number } | null;
     player_health: ResourceState | null;
+}
+
+/** Server response to an interaction attempt. */
+export interface InteractResultPayload {
+    success: boolean;
+    object?: MapObjectData;
+    reason?: string;
 }
 
 /** Damage event from the server. */

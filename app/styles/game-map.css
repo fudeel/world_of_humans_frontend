@@ -1,0 +1,42 @@
+/* app/styles/game-map.css */
+/* Styles for the Leaflet-based game map and its custom tooltips. */
+/* Import this in app/globals.css or app/layout.tsx.               */
+
+/* ── Map Container ────────────────────────────────────────────── */
+
+.game-map {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+/* Override Leaflet's default tooltip styling for game entities. */
+
+.entity-tooltip,
+.map-object-tooltip {
+    background: rgba(15, 17, 24, 0.92) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 4px !important;
+    color: #e5e7eb !important;
+    font-family: var(--font-body), system-ui, sans-serif !important;
+    font-size: 0.72rem !important;
+    padding: 3px 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+.entity-tooltip::before,
+.map-object-tooltip::before {
+    border-top-color: rgba(15, 17, 24, 0.92) !important;
+}
+
+/* Tone down Leaflet's default UI chrome for a game feel. */
+
+.leaflet-control-attribution {
+    background: rgba(15, 17, 24, 0.6) !important;
+    color: rgba(255, 255, 255, 0.3) !important;
+    font-size: 0.55rem !important;
+}
+
+.leaflet-control-attribution a {
+    color: rgba(255, 255, 255, 0.4) !important;
+}

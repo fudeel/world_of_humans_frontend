@@ -11,6 +11,8 @@ import type {
     DamagePayload,
     DeathPayload,
     Faction,
+    InteractResultPayload,
+    MapObjectData,
     WSMessage,
     WorldEntity,
     WorldStatePayload,
@@ -48,6 +50,7 @@ export interface GameState {
     classData: ClassDataPayload | null;
     player: PlayerState | null;
     entities: WorldEntity[];
+    mapObjects: MapObjectData[];
     combatLog: CombatEvent[];
     error: string | null;
 }
@@ -59,6 +62,7 @@ export function useGameState() {
         classData: null,
         player: null,
         entities: [],
+        mapObjects: [],
         combatLog: [],
         error: null,
     });
@@ -104,7 +108,11 @@ export function useGameState() {
             case "s_world_state": {
                 const data = msg.payload as unknown as WorldStatePayload;
                 setState((prev) => {
-                    const next = { ...prev, entities: data.entities };
+                    const next = {
+                        ...prev,
+                        entities: data.entities,
+                        mapObjects: data.map_objects ?? [],
+                    };
                     if (prev.player && data.player_position) {
                         next.player = {
                             ...prev.player,
@@ -148,6 +156,17 @@ export function useGameState() {
                         },
                     ],
                 }));
+                break;
+            }
+
+            case "s_interact_result": {
+                const data = msg.payload as unknown as InteractResultPayload;
+                if (!data.success && data.reason) {
+                    setState((prev) => ({
+                        ...prev,
+                        error: data.reason ?? "Interaction failed.",
+                    }));
+                }
                 break;
             }
 
@@ -204,6 +223,11 @@ export function useGameState() {
         wsClient.send("c_attack", { target_id: targetId });
     }, []);
 
+    /** Interact with a map object. */
+    const interactWith = useCallback((objectId: string) => {
+        wsClient.send("c_interact", { object_id: objectId });
+    }, []);
+
     /** Dismiss the current error. */
     const clearError = useCallback(() => {
         setState((prev) => ({ ...prev, error: null }));
@@ -215,6 +239,7 @@ export function useGameState() {
         createCharacter,
         movePlayer,
         attackTarget,
+        interactWith,
         clearError,
     };
 }

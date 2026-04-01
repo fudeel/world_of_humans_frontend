@@ -1,30 +1,44 @@
 // app/components/game/GameWorld.tsx
-// 2D SVG world renderer with click-to-move and entity selection.
+// 2D SVG world renderer with click-to-move, entity selection, and map objects.
 
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import type { WorldEntity } from "@/app/types/game";
+import type { MapObjectData, WorldEntity } from "@/app/types/game";
 import type { PlayerState } from "@/app/hooks/useGameState";
 import EntityMarker from "./EntityMarker";
+import MapObjectMapMarker from "@/app/components/game/MapObjectMapMarker";
 
 interface GameWorldProps {
     player: PlayerState;
     entities: WorldEntity[];
+    mapObjects: MapObjectData[];
     selectedId: string | null;
+    selectedObjectId: string | null;
     onMove: (x: number, y: number) => void;
     onSelectEntity: (id: string | null) => void;
+    onSelectObject: (id: string | null) => void;
 }
 
 /** Pixels per world unit. */
 const BASE_SCALE = 1.4;
 
+/** Euclidean distance between two 2D points. */
+function dist(a: { x: number; y: number }, b: { x: number; y: number }): number {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
 export default function GameWorld({
                                       player,
                                       entities,
+                                      mapObjects,
                                       selectedId,
+                                      selectedObjectId,
                                       onMove,
                                       onSelectEntity,
+                                      onSelectObject,
                                   }: GameWorldProps) {
     const svgRef = useRef<SVGSVGElement>(null);
     const [viewSize, setViewSize] = useState({ w: 900, h: 600 });
@@ -34,8 +48,6 @@ export default function GameWorld({
     const worldH = bounds.max_y - bounds.min_y;
 
     const scale = BASE_SCALE;
-    const mapW = worldW * scale;
-    const mapH = worldH * scale;
 
     /** Camera offset so player is centred. */
     const camX = viewSize.w / 2 - player.position.x * scale;
@@ -58,10 +70,11 @@ export default function GameWorld({
                 worldY <= bounds.max_y
             ) {
                 onSelectEntity(null);
+                onSelectObject(null);
                 onMove(worldX, worldY);
             }
         },
-        [camX, camY, scale, bounds, onMove, onSelectEntity]
+        [camX, camY, scale, bounds, onMove, onSelectEntity, onSelectObject]
     );
 
     /** Update viewbox on resize. */
@@ -158,6 +171,25 @@ export default function GameWorld({
                     />
                 ))}
 
+                {/* Map Objects (rendered below entities so entities appear on top) */}
+                {mapObjects.map((obj) => (
+                    <MapObjectMapMarker
+                        key={obj.object_id}
+                        object={obj}
+                        scale={scale}
+                        offsetX={camX}
+                        offsetY={camY}
+                        selected={selectedObjectId === obj.object_id}
+                        inRange={dist(player.position, obj.position) <= obj.interaction_range}
+                        onClick={() => {
+                            onSelectEntity(null);
+                            onSelectObject(
+                                selectedObjectId === obj.object_id ? null : obj.object_id
+                            );
+                        }}
+                    />
+                ))}
+
                 {/* Entities */}
                 {entities.map((entity) => (
                     <EntityMarker
@@ -169,6 +201,7 @@ export default function GameWorld({
                         selected={selectedId === entity.entity_id}
                         onClick={() => {
                             if (!entity.is_self) {
+                                onSelectObject(null);
                                 onSelectEntity(
                                     selectedId === entity.entity_id ? null : entity.entity_id
                                 );

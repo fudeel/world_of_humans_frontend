@@ -1,23 +1,37 @@
 // app/page.tsx
 // Main entry point: connects to the Python game server via WebSocket,
-// guides the player through character creation, then renders the live
-// 2D world view with arrow-key movement and entity interaction.
+// guides the player through character creation, then renders a real
+// Leaflet map with entity interaction and arrow-key movement.
 
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGameState } from "@/app/hooks/useGameState";
 import CharacterCreation from "@/app/components/character-creation/CharacterCreation";
-import GameWorld from "@/app/components/game/GameWorld";
 import PlayerHud from "@/app/components/game/PlayerHud";
 import TargetPanel from "@/app/components/game/TargetPanel";
+import ObjectInteractionPanel from "@/app/components/game/ObjectInteractionPanel";
 import CombatLog from "@/app/components/game/CombatLog";
 
-/** World units the player moves per arrow-key tick. */
+// Leaflet accesses `window` — must be loaded client-side only.
+const GameMap = dynamic(
+    () => import("@/app/components/game/GameMap"),
+    { ssr: false },
+);
+
+/** World units the player moves per arrow-key tick (~8 meters). */
 const MOVE_STEP = 8;
 
 /** Milliseconds between repeated movement while holding a key. */
 const MOVE_INTERVAL = 80;
+
+/** Euclidean distance between two 2D points. */
+function dist(a: { x: number; y: number }, b: { x: number; y: number }): number {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return Math.sqrt(dx * dx + dy * dy);
+}
 
 export default function Home() {
     const {
@@ -26,26 +40,38 @@ export default function Home() {
         classData,
         player,
         entities,
+        mapObjects,
         combatLog,
         error,
         createCharacter,
         movePlayer,
         attackTarget,
+        interactWith,
         clearError,
     } = useGameState();
 
     const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
+    const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
 
     const selectedEntity = entities.find(
         (e) => e.entity_id === selectedEntityId && e.is_alive
     );
 
-    /** Deselect via effect if the selected entity disappeared or died. */
+    const selectedObject = mapObjects.find(
+        (o) => o.object_id === selectedObjectId && o.active
+    );
+
     useEffect(() => {
         if (selectedEntityId && !selectedEntity) {
             setSelectedEntityId(null);
         }
     }, [selectedEntityId, selectedEntity]);
+
+    useEffect(() => {
+        if (selectedObjectId && !selectedObject) {
+            setSelectedObjectId(null);
+        }
+    }, [selectedObjectId, selectedObject]);
 
     /* ── Arrow-key movement ───────────────────────────────────────── */
 
@@ -62,10 +88,12 @@ export default function Home() {
         let dx = 0;
         let dy = 0;
 
+        // Left/Right → longitude (x), Up/Down → latitude (y)
+        // Up increases y (moves north on map), Down decreases y (moves south)
         if (keys.has("ArrowLeft") || keys.has("a")) dx -= MOVE_STEP;
         if (keys.has("ArrowRight") || keys.has("d")) dx += MOVE_STEP;
-        if (keys.has("ArrowUp") || keys.has("w")) dy -= MOVE_STEP;
-        if (keys.has("ArrowDown") || keys.has("s")) dy += MOVE_STEP;
+        if (keys.has("ArrowUp") || keys.has("w")) dy += MOVE_STEP;
+        if (keys.has("ArrowDown") || keys.has("s")) dy -= MOVE_STEP;
 
         if (dx === 0 && dy === 0) return;
 
@@ -163,6 +191,10 @@ export default function Home() {
 
     /* ── Playing ─────────────────────────────────────────────────── */
     if (phase === "playing" && player) {
+        const isObjectInRange = selectedObject
+            ? dist(player.position, selectedObject.position) <= selectedObject.interaction_range
+            : false;
+
         return (
             <div className="screen screen--playing">
                 {error && (
@@ -171,12 +203,15 @@ export default function Home() {
                     </div>
                 )}
 
-                <GameWorld
+                <GameMap
                     player={player}
                     entities={entities}
+                    mapObjects={mapObjects}
                     selectedId={selectedEntityId}
+                    selectedObjectId={selectedObjectId}
                     onMove={movePlayer}
                     onSelectEntity={setSelectedEntityId}
+                    onSelectObject={setSelectedObjectId}
                 />
 
                 <PlayerHud player={player} />
@@ -189,10 +224,19 @@ export default function Home() {
                     />
                 )}
 
+                {selectedObject && (
+                    <ObjectInteractionPanel
+                        object={selectedObject}
+                        inRange={isObjectInRange}
+                        onInteract={interactWith}
+                        onDeselect={() => setSelectedObjectId(null)}
+                    />
+                )}
+
                 <CombatLog events={combatLog} playerId={player.playerId} />
 
                 <div className="controls-hint">
-                    Arrow keys / WASD to move · Click mob to select · Click map to move
+                    Arrow keys / WASD to move · Click mob to select · Click object to interact · Click map to move
                 </div>
             </div>
         );

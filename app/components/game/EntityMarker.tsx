@@ -1,15 +1,14 @@
-// app/components/game/EntityMarker.tsx
-// Renders a single entity (player, mob, or other) on the 2D world map.
+// app/components/game/EntityMapMarker.tsx
+// Renders a single living entity on the Leaflet map as a CircleMarker.
 
 "use client";
 
+import { CircleMarker, Popup, Tooltip } from "react-leaflet";
 import type { WorldEntity } from "@/app/types/game";
+import { worldToGeo } from "@/app/lib/coordinates";
 
-interface EntityMarkerProps {
+interface EntityMapMarkerProps {
     entity: WorldEntity;
-    scale: number;
-    offsetX: number;
-    offsetY: number;
     selected: boolean;
     onClick: () => void;
 }
@@ -23,126 +22,71 @@ const MOB_STATE_COLORS: Record<string, string> = {
     dead: "#374151",
 };
 
-export default function EntityMarker({
-                                         entity,
-                                         scale,
-                                         offsetX,
-                                         offsetY,
-                                         selected,
-                                         onClick,
-                                     }: EntityMarkerProps) {
+export default function EntityMapMarker({
+                                            entity,
+                                            selected,
+                                            onClick,
+                                        }: EntityMapMarkerProps) {
     if (!entity.is_alive && !entity.is_self) return null;
 
-    const screenX = entity.position.x * scale + offsetX;
-    const screenY = entity.position.y * scale + offsetY;
-
+    const [lat, lng] = worldToGeo(entity.position.x, entity.position.y);
     const isMob = !!entity.mob_name;
     const displayName = entity.mob_name ?? entity.name;
 
-    let markerColor: string;
+    let color: string;
     if (entity.is_self) {
-        markerColor = "#22c55e";
+        color = "#22c55e";
     } else if (entity.is_player) {
-        markerColor = entity.faction === "Horde" ? "#dc2626" : "#2563eb";
+        color = entity.faction === "Horde" ? "#dc2626" : "#2563eb";
     } else if (entity.mob_state) {
-        markerColor = MOB_STATE_COLORS[entity.mob_state] ?? "#6b7280";
+        color = MOB_STATE_COLORS[entity.mob_state] ?? "#6b7280";
     } else {
-        markerColor = "#6b7280";
+        color = "#6b7280";
     }
 
-    const hpPct =
-        entity.health.maximum > 0
-            ? entity.health.current / entity.health.maximum
-            : 0;
-
-    const size = entity.is_self ? 14 : isMob ? 10 : 12;
+    const radius = entity.is_self ? 10 : isMob ? 7 : 8;
+    const hpPct = entity.health.maximum > 0
+        ? entity.health.current / entity.health.maximum
+        : 0;
 
     return (
-        <g
-            className="entity-marker"
-            transform={`translate(${screenX}, ${screenY})`}
-            onClick={(e) => {
-                e.stopPropagation();
-                onClick();
+        <CircleMarker
+            center={[lat, lng]}
+            radius={radius}
+            pathOptions={{
+                color: selected ? "#facc15" : "#000",
+                weight: selected ? 3 : 1.5,
+                fillColor: color,
+                fillOpacity: 0.9,
             }}
-            style={{ cursor: isMob ? "pointer" : "default" }}
+            eventHandlers={{
+                click: (e) => {
+                    e.originalEvent.stopPropagation();
+                    if (!entity.is_self) onClick();
+                },
+            }}
         >
-            {/* Selection ring */}
-            {selected && (
-                <circle
-                    r={size + 4}
-                    fill="none"
-                    stroke="#facc15"
-                    strokeWidth={2}
-                    className="entity-marker__selection"
-                />
-            )}
-
-            {/* Body */}
-            {entity.is_self ? (
-                <polygon
-                    points={`0,${-size} ${size * 0.7},${size * 0.5} ${-size * 0.7},${size * 0.5}`}
-                    fill={markerColor}
-                    stroke="#000"
-                    strokeWidth={1.5}
-                />
-            ) : (
-                <circle
-                    r={size / 2}
-                    fill={markerColor}
-                    stroke={selected ? "#facc15" : "#000"}
-                    strokeWidth={1}
-                />
-            )}
-
-            {/* Health bar */}
-            {!entity.is_self && entity.is_alive && (
-                <g transform={`translate(0, ${-size - 4})`}>
-                    <rect
-                        x={-14}
-                        y={-3}
-                        width={28}
-                        height={4}
-                        rx={1}
-                        fill="#1f2937"
-                        stroke="#000"
-                        strokeWidth={0.5}
-                    />
-                    <rect
-                        x={-14}
-                        y={-3}
-                        width={28 * hpPct}
-                        height={4}
-                        rx={1}
-                        fill={hpPct > 0.5 ? "#22c55e" : hpPct > 0.25 ? "#f59e0b" : "#ef4444"}
-                    />
-                </g>
-            )}
-
-            {/* Name label */}
-            <text
-                y={size + 12}
-                textAnchor="middle"
-                className="entity-marker__label"
-                fill={entity.is_self ? "#86efac" : "#e5e7eb"}
-                fontSize={entity.is_self ? 11 : 9}
-                fontWeight={entity.is_self ? 700 : 400}
+            <Tooltip
+                direction="top"
+                offset={[0, -10]}
+                permanent={entity.is_self || selected}
+                className="entity-tooltip"
             >
-                {entity.is_self ? "You" : displayName}
-            </text>
-
-            {/* Level */}
-            {isMob && (
-                <text
-                    y={size + 22}
-                    textAnchor="middle"
-                    fill="#9ca3af"
-                    fontSize={8}
-                >
-                    Lv.{entity.mob_level ?? entity.level}
-                    {entity.mob_state ? ` (${entity.mob_state})` : ""}
-                </text>
-            )}
-        </g>
+                <span style={{ fontWeight: entity.is_self ? 700 : 400 }}>
+                    {entity.is_self ? "You" : displayName}
+                </span>
+                {isMob && (
+                    <span style={{ opacity: 0.7, fontSize: "0.8em" }}>
+                        {" "}Lv.{entity.mob_level ?? entity.level}
+                        {entity.mob_state ? ` (${entity.mob_state})` : ""}
+                    </span>
+                )}
+                {!entity.is_self && entity.is_alive && (
+                    <span style={{ display: "block", fontSize: "0.75em", opacity: 0.6 }}>
+                        HP {Math.round(hpPct * 100)}%
+                    </span>
+                )}
+            </Tooltip>
+        </CircleMarker>
     );
 }
