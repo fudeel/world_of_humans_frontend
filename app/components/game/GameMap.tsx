@@ -15,6 +15,8 @@ import type { MapObjectData, WorldEntity } from "@/app/types/game";
 import type { PlayerState } from "@/app/hooks/useGameState";
 import { worldToGeo, geoToWorld, GEO_CENTER } from "@/app/lib/coordinates";
 import MapFollower from "./MapFollower";
+import MapObjectMapMarker from "@/app/components/game/MapObjectMapMarker";
+import EntityMapMarker from "@/app/components/game/EntityMarker";
 
 interface GameMapProps {
     player: PlayerState;
@@ -104,7 +106,7 @@ export default function GameMap({
 
                 {/* Map objects (items, nodes, NPCs, chests) */}
                 {mapObjects.map((obj) => (
-                    <MapObjectMarker
+                    <MapObjectMapMarker
                         key={obj.object_id}
                         object={obj}
                         selected={selectedObjectId === obj.object_id}
