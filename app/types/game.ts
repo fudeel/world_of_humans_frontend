@@ -155,6 +155,14 @@ export interface LootDropData {
     active: boolean;
 }
 
+/** Experience tracker state from the server. */
+export interface ExperienceData {
+    level: number;
+    current_exp: number;
+    exp_to_next_level: number;
+    is_max_level: boolean;
+}
+
 /** A class available during character creation. */
 export interface ClassInfo {
     type: ClassName;
@@ -216,6 +224,7 @@ export interface CharacterCreatedPayload {
     inventory: InventoryData;
     currency: CurrencyData;
     quest_log: QuestLogData;
+    experience: ExperienceData;
 }
 
 /** A single entity in the world state snapshot. */
@@ -259,6 +268,7 @@ export interface WorldStatePayload {
     player_position: { x: number; y: number } | null;
     player_health: ResourceState | null;
     currency: CurrencyData;
+    experience?: ExperienceData;
 }
 
 /** Server response to an interaction attempt. */
@@ -324,6 +334,23 @@ export interface QuestTurnedInPayload {
     quest_log: QuestLogData;
     inventory: InventoryData;
     currency: CurrencyData;
+    experience: ExperienceData;
+}
+
+/** Experience gained from a kill or quest. */
+export interface ExperienceGainedPayload {
+    source: string;
+    exp_gained: number;
+    experience: ExperienceData;
+    quest_title?: string;
+}
+
+/** Level up notification from the server. */
+export interface LevelUpPayload {
+    old_level: number;
+    new_level: number;
+    levels_gained: number;
+    experience: ExperienceData;
 }
 
 /** Generic WebSocket message envelope. */

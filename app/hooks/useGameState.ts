@@ -11,9 +11,12 @@ import type {
     CurrencyData,
     DamagePayload,
     DeathPayload,
+    ExperienceData,
+    ExperienceGainedPayload,
     Faction,
     InteractResultPayload,
     InventoryData,
+    LevelUpPayload,
     LootDropData,
     LootResultPayload,
     MapObjectData,
@@ -27,6 +30,7 @@ import type {
     WorldStatePayload,
     ZoneBounds,
 } from "@/app/types/game";
+import type { ExpToastEntry } from "@/app/components/game/ExperienceToast";
 
 /** Phases of the game lifecycle. */
 export type GamePhase = "connecting" | "character_creation" | "playing";
@@ -67,6 +71,9 @@ export interface GameState {
     questLog: QuestLogData | null;
     questOffer: QuestOfferedPayload | null;
     activeLootDrop: LootDropData | null;
+    experience: ExperienceData | null;
+    expToasts: ExpToastEntry[];
+    levelUpLevel: number | null;
     error: string | null;
     notification: string | null;
 }
@@ -86,6 +93,9 @@ export function useGameState() {
         questLog: null,
         questOffer: null,
         activeLootDrop: null,
+        experience: null,
+        expToasts: [],
+        levelUpLevel: null,
         error: null,
         notification: null,
     });
@@ -127,6 +137,7 @@ export function useGameState() {
                     inventory: data.inventory,
                     currency: data.currency,
                     questLog: data.quest_log,
+                    experience: data.experience,
                 }));
                 break;
             }
@@ -149,6 +160,15 @@ export function useGameState() {
                     }
                     if (data.currency) {
                         next.currency = data.currency;
+                    }
+                    if (data.experience) {
+                        next.experience = data.experience;
+                        if (prev.player && data.experience.level !== prev.player.level) {
+                            next.player = {
+                                ...(next.player ?? prev.player!),
+                                level: data.experience.level,
+                            };
+                        }
                     }
                     return next;
                 });
@@ -195,19 +215,17 @@ export function useGameState() {
                     const next: GameState = { ...prev };
                     if (data.inventory) next.inventory = data.inventory;
                     if (data.currency) next.currency = data.currency;
+                    if (!data.success && data.reason) {
+                        next.notification = data.reason;
+                    } else if (data.item) {
+                        next.notification = `Looted: ${data.item.name}`;
+                    } else if (data.money_looted && data.money_looted > 0) {
+                        next.notification = `Looted: ${data.money_looted} copper`;
+                    }
                     if (data.drop) {
                         next.activeLootDrop = data.drop;
                     } else {
                         next.activeLootDrop = null;
-                    }
-                    if (!data.success && data.reason) {
-                        next.error = data.reason;
-                    }
-                    if (data.success && data.item) {
-                        next.notification = `Looted: ${data.item.name}`;
-                    }
-                    if (data.success && data.money_looted && data.money_looted > 0) {
-                        next.notification = `Looted: ${data.money_looted} copper`;
                     }
                     return next;
                 });
@@ -253,7 +271,11 @@ export function useGameState() {
                     questLog: data.quest_log,
                     inventory: data.inventory,
                     currency: data.currency,
+                    experience: data.experience,
                     notification: `Reward: ${data.reward.copper} copper`,
+                    player: prev.player
+                        ? { ...prev.player, level: data.experience.level }
+                        : null,
                 }));
                 break;
             }
@@ -270,6 +292,37 @@ export function useGameState() {
                     ...prev,
                     inventory: data.inventory,
                     currency: data.currency,
+                }));
+                break;
+            }
+
+            case "s_experience_gained": {
+                const data = msg.payload as unknown as ExperienceGainedPayload;
+                setState((prev) => ({
+                    ...prev,
+                    experience: data.experience,
+                    expToasts: [
+                        ...prev.expToasts.slice(-4),
+                        {
+                            id: ++eventIdRef.current,
+                            amount: data.exp_gained,
+                            source: data.source,
+                            timestamp: Date.now(),
+                        },
+                    ],
+                }));
+                break;
+            }
+
+            case "s_level_up": {
+                const data = msg.payload as unknown as LevelUpPayload;
+                setState((prev) => ({
+                    ...prev,
+                    experience: data.experience,
+                    levelUpLevel: data.new_level,
+                    player: prev.player
+                        ? { ...prev.player, level: data.new_level }
+                        : null,
                 }));
                 break;
             }
@@ -315,6 +368,19 @@ export function useGameState() {
         };
     }, [handleMessage]);
 
+    /** Auto-prune XP toasts older than 2.5 seconds. */
+    useEffect(() => {
+        if (state.expToasts.length === 0) return;
+        const timer = setInterval(() => {
+            const cutoff = Date.now() - 2500;
+            setState((prev) => ({
+                ...prev,
+                expToasts: prev.expToasts.filter((t) => t.timestamp > cutoff),
+            }));
+        }, 500);
+        return () => clearInterval(timer);
+    }, [state.expToasts.length]);
+
     const requestClassData = useCallback(() => {
         wsClient.send("c_get_class_data");
     }, []);
@@ -338,47 +404,38 @@ export function useGameState() {
         wsClient.send("c_interact", { object_id: objectId });
     }, []);
 
-    /** Interact with an NPC quest giver. */
     const interactNpc = useCallback((entityId: string) => {
         wsClient.send("c_interact_npc", { entity_id: entityId });
     }, []);
 
-    /** Accept a quest by id. */
     const acceptQuest = useCallback((questId: string) => {
         wsClient.send("c_accept_quest", { quest_id: questId });
     }, []);
 
-    /** Abandon a quest by id. */
     const abandonQuest = useCallback((questId: string) => {
         wsClient.send("c_abandon_quest", { quest_id: questId });
     }, []);
 
-    /** Turn in a completed quest. */
     const turnInQuest = useCallback((questId: string) => {
         wsClient.send("c_turn_in_quest", { quest_id: questId });
     }, []);
 
-    /** Pick up a specific item from a loot drop. */
     const lootItem = useCallback((dropId: string, itemId: string) => {
         wsClient.send("c_loot_item", { drop_id: dropId, item_id: itemId });
     }, []);
 
-    /** Pick up money from a loot drop. */
     const lootMoney = useCallback((dropId: string) => {
         wsClient.send("c_loot_money", { drop_id: dropId });
     }, []);
 
-    /** Open a loot drop window (client-side only). */
     const openLootDrop = useCallback((drop: LootDropData) => {
         setState((prev) => ({ ...prev, activeLootDrop: drop }));
     }, []);
 
-    /** Close the loot window. */
     const closeLootDrop = useCallback(() => {
         setState((prev) => ({ ...prev, activeLootDrop: null }));
     }, []);
 
-    /** Close the quest offer panel. */
     const closeQuestOffer = useCallback(() => {
         setState((prev) => ({ ...prev, questOffer: null }));
     }, []);
@@ -389,6 +446,10 @@ export function useGameState() {
 
     const clearNotification = useCallback(() => {
         setState((prev) => ({ ...prev, notification: null }));
+    }, []);
+
+    const clearLevelUp = useCallback(() => {
+        setState((prev) => ({ ...prev, levelUpLevel: null }));
     }, []);
 
     return {
@@ -409,5 +470,6 @@ export function useGameState() {
         closeQuestOffer,
         clearError,
         clearNotification,
+        clearLevelUp,
     };
 }

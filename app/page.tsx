@@ -19,6 +19,8 @@ import QuestLogPanel from "@/app/components/game/QuestLogPanel";
 import QuestOfferPanel from "@/app/components/game/QuestOfferPanel";
 import LootWindow from "@/app/components/game/LootWindow";
 import NotificationToast from "@/app/components/game/NotificationToast";
+import ExperienceToast from "@/app/components/game/ExperienceToast";
+import LevelUpNotification from "@/app/components/game/LevelUpNotification";
 
 const GameMap = dynamic(
     () => import("@/app/components/game/GameMap"),
@@ -68,6 +70,10 @@ export default function Home() {
         closeQuestOffer,
         clearError,
         clearNotification,
+        experience,
+        expToasts,
+        levelUpLevel,
+        clearLevelUp,
     } = useGameState();
 
     const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
@@ -271,7 +277,16 @@ export default function Home() {
                         />
                     )}
 
-                    <PlayerHud player={player} />
+                    {/* XP gain toasts */}
+                    <ExperienceToast toasts={expToasts} />
+
+                    {/* Level-up notification */}
+                    <LevelUpNotification
+                        newLevel={levelUpLevel}
+                        onDismiss={clearLevelUp}
+                    />
+
+                    <PlayerHud player={player} experience={experience} />
 
                     {selectedEntity && (
                         <TargetPanel
