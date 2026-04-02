@@ -25,11 +25,14 @@ import type {
     QuestLogData,
     QuestOfferedPayload,
     QuestTurnedInPayload,
+    VendorOpenPayload,
+    VendorResultPayload,
     WSMessage,
     WorldEntity,
     WorldStatePayload,
     ZoneBounds,
 } from "@/app/types/game";
+import type { VendorData } from "@/app/types/game";
 import type { ExpToastEntry } from "@/app/components/game/ExperienceToast";
 
 /** Phases of the game lifecycle. */
@@ -74,6 +77,8 @@ export interface GameState {
     experience: ExperienceData | null;
     expToasts: ExpToastEntry[];
     levelUpLevel: number | null;
+    vendorData: VendorData | null;
+    vendorOpen: boolean;
     error: string | null;
     notification: string | null;
 }
@@ -96,6 +101,8 @@ export function useGameState() {
         experience: null,
         expToasts: [],
         levelUpLevel: null,
+        vendorData: null,
+        vendorOpen: false,
         error: null,
         notification: null,
     });
@@ -327,6 +334,37 @@ export function useGameState() {
                 break;
             }
 
+            case "s_vendor_open": {
+                const data = msg.payload as unknown as VendorOpenPayload;
+                setState((prev) => ({
+                    ...prev,
+                    vendorData: data.vendor,
+                    vendorOpen: true,
+                    inventory: data.inventory,
+                    currency: data.currency,
+                }));
+                break;
+            }
+
+            case "s_vendor_result": {
+                const data = msg.payload as unknown as VendorResultPayload;
+                setState((prev) => {
+                    const next: GameState = { ...prev };
+                    if (data.vendor) next.vendorData = data.vendor;
+                    if (data.inventory) next.inventory = data.inventory;
+                    if (data.currency) next.currency = data.currency;
+                    if (!data.success && data.reason) {
+                        next.notification = data.reason;
+                    } else if (data.success && data.action === "buy") {
+                        next.notification = "Item purchased.";
+                    } else if (data.success && data.action === "sell") {
+                        next.notification = "Item sold.";
+                    }
+                    return next;
+                });
+                break;
+            }
+
             case "s_interact_result": {
                 const data = msg.payload as unknown as InteractResultPayload;
                 if (!data.success && data.reason) {
@@ -440,6 +478,18 @@ export function useGameState() {
         setState((prev) => ({ ...prev, questOffer: null }));
     }, []);
 
+    const vendorBuy = useCallback((vendorId: string, itemId: string) => {
+        wsClient.send("c_vendor_buy", { vendor_id: vendorId, item_id: itemId });
+    }, []);
+
+    const vendorSell = useCallback((vendorId: string, slotIndex: number) => {
+        wsClient.send("c_vendor_sell", { vendor_id: vendorId, slot_index: slotIndex });
+    }, []);
+
+    const closeVendor = useCallback(() => {
+        setState((prev) => ({ ...prev, vendorOpen: false, vendorData: null }));
+    }, []);
+
     const clearError = useCallback(() => {
         setState((prev) => ({ ...prev, error: null }));
     }, []);
@@ -468,6 +518,9 @@ export function useGameState() {
         openLootDrop,
         closeLootDrop,
         closeQuestOffer,
+        vendorBuy,
+        vendorSell,
+        closeVendor,
         clearError,
         clearNotification,
         clearLevelUp,

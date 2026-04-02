@@ -1,5 +1,6 @@
-// app/components/game/EntityMapMarker.tsx
+// app/components/game/EntityMarker.tsx
 // Renders a single living entity on the Leaflet map as a CircleMarker.
+// Vendors show as gold, quest givers as blue, hostile mobs by state.
 
 "use client";
 
@@ -35,12 +36,18 @@ export default function EntityMapMarker({
     const center: LatLngTuple = worldToGeo(entity.position.x, entity.position.y);
     const isMob = !!entity.mob_name;
     const displayName = entity.mob_name ?? entity.name;
+    const isVendor = !!entity.is_vendor;
+    const isQuestGiver = !!entity.is_quest_giver;
 
     let color: string;
     if (entity.is_self) {
         color = "#22c55e";
     } else if (entity.is_player) {
         color = entity.faction === "Horde" ? "#dc2626" : "#2563eb";
+    } else if (isVendor) {
+        color = "#d4a843";
+    } else if (isQuestGiver) {
+        color = "#3b82f6";
     } else if (entity.mob_state) {
         color = MOB_STATE_COLORS[entity.mob_state] ?? "#6b7280";
     } else {
@@ -81,12 +88,22 @@ export default function EntityMapMarker({
                 {isMob && (
                     <span style={{ opacity: 0.7, fontSize: "0.8em" }}>
                         {" "}Lv.{entity.mob_level ?? entity.level}
-                        {entity.mob_state ? ` (${entity.mob_state})` : ""}
+                        {entity.mob_state ? ` · ${entity.mob_state}` : ""}
                     </span>
                 )}
-                {!entity.is_self && entity.is_alive && (
-                    <span style={{ display: "block", fontSize: "0.75em", opacity: 0.6 }}>
-                        HP {Math.round(hpPct * 100)}%
+                {isVendor && (
+                    <span style={{ display: "block", fontSize: "0.75em", color: "#d4a843" }}>
+                        🏪 Vendor
+                    </span>
+                )}
+                {isQuestGiver && !isVendor && (
+                    <span style={{ display: "block", fontSize: "0.75em", color: "#60a5fa" }}>
+                        📜 Quest Giver
+                    </span>
+                )}
+                {!entity.is_self && hpPct < 1 && (
+                    <span style={{ display: "block", fontSize: "0.75em", opacity: 0.5 }}>
+                        HP: {Math.round(hpPct * 100)}%
                     </span>
                 )}
             </Tooltip>

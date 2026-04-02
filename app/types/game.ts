@@ -244,6 +244,7 @@ export interface WorldEntity {
     mob_state?: MobStateName;
     mob_level?: number;
     is_quest_giver?: boolean;
+    is_vendor?: boolean;
 }
 
 /** A non-mob object placed on the world map by the server. */
@@ -351,6 +352,40 @@ export interface LevelUpPayload {
     new_level: number;
     levels_gained: number;
     experience: ExperienceData;
+}
+
+// ── Vendor types ──────────────────────────────────────────────────
+
+/** One stock entry in a vendor's inventory. */
+export interface VendorStockEntryData {
+    item: ItemData;
+    quantity: number;
+    buy_price: number;
+}
+
+/** Full vendor state from the server. */
+export interface VendorData {
+    vendor_id: string;
+    currency: CurrencyData;
+    stock: VendorStockEntryData[];
+}
+
+/** Payload when a vendor window opens. */
+export interface VendorOpenPayload {
+    vendor_id: string;
+    vendor: VendorData;
+    inventory: InventoryData;
+    currency: CurrencyData;
+}
+
+/** Result of a buy or sell transaction. */
+export interface VendorResultPayload {
+    success: boolean;
+    reason?: string;
+    action?: "buy" | "sell";
+    vendor?: VendorData | null;
+    inventory?: InventoryData;
+    currency?: CurrencyData;
 }
 
 /** Generic WebSocket message envelope. */

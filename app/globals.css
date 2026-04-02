@@ -3,6 +3,7 @@
 
 @import "tailwindcss";
 @import "./styles/game-panels.css";
+@import "./styles/vendor-panel.css";
 
 :root {
   --bg-deep: #08090c;
@@ -116,253 +117,169 @@ body {
   margin-top: 0.4rem;
   font-family: var(--font-mono);
   background: var(--bg-card);
-  padding: 0.4rem 0.8rem;
+  padding: 0.3rem 0.8rem;
   border-radius: 4px;
-  border: 1px solid var(--border);
-  color: var(--gold-dim);
+  font-size: 0.85rem;
 }
 
 /* ── Error Toast ──────────────────────────────────────────────── */
 
 .error-toast {
   position: fixed;
-  top: 1rem;
+  top: 16px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 100;
-  background: #451a1a;
-  border: 1px solid var(--danger);
+  background: rgba(127, 29, 29, 0.92);
+  border: 1px solid #b91c1c;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
   color: #fca5a5;
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  z-index: 40;
   cursor: pointer;
   display: flex;
-  gap: 0.8rem;
+  gap: 0.5rem;
   align-items: center;
+  backdrop-filter: blur(6px);
 }
 
 .error-toast__dismiss {
   opacity: 0.5;
+  font-size: 0.9rem;
 }
 
 /* ── Character Creation ───────────────────────────────────────── */
 
-.character-creation {
-  max-width: 900px;
+.creation-panel {
   width: 100%;
+  max-width: 700px;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  align-items: center;
+  gap: 2.5rem;
 }
 
-.character-creation__heading {
+.creation-panel__heading {
   font-family: var(--font-display);
   font-size: 1.8rem;
   font-weight: 700;
   color: var(--gold);
+  letter-spacing: 0.03em;
   text-align: center;
-  letter-spacing: 0.05em;
 }
 
-.back-button {
-  background: none;
-  border: none;
+.creation-panel__step-label {
+  font-size: 0.75rem;
   color: var(--text-muted);
-  font-size: 0.85rem;
-  cursor: pointer;
-  padding: 0;
-  margin-bottom: 0.5rem;
-  transition: color 0.15s;
-}
-
-.back-button:hover {
-  color: var(--text-primary);
-}
-
-/* ── Faction Select ───────────────────────────────────────────── */
-
-.faction-select__title {
-  font-family: var(--font-display);
-  font-size: 1.3rem;
-  color: var(--text-primary);
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-
-.faction-select__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-}
-
-.faction-card {
-  background: var(--bg-card);
-  border: 2px solid var(--border);
-  border-radius: 10px;
-  padding: 2.5rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-  overflow: hidden;
-}
-
-.faction-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-          circle at 50% 30%,
-          var(--faction-color, transparent) 0%,
-          transparent 70%
-  );
-  opacity: 0.08;
-  transition: opacity 0.2s;
-}
-
-.faction-card:hover {
-  border-color: var(--border-bright);
-  transform: translateY(-2px);
-}
-
-.faction-card:hover::before {
-  opacity: 0.15;
-}
-
-.faction-card__sigil {
-  font-size: 3rem;
-}
-
-.faction-card__name {
-  font-family: var(--font-display);
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.faction-card__motto {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-/* ── Race Select ──────────────────────────────────────────────── */
-
-.race-select__title {
-  font-family: var(--font-display);
-  font-size: 1.3rem;
-  color: var(--text-primary);
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-}
-
-.race-select__faction-badge {
-  font-size: 0.7rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: 4px;
-  color: #fff;
-  font-family: var(--font-body);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.4rem;
 }
 
-.race-select__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+/* ── Faction Tabs ─────────────────────────────────────────────── */
+
+.faction-tabs {
+  display: flex;
   gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.faction-tab {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.faction-tab:hover {
+  border-color: var(--border-bright);
+}
+
+.faction-tab--alliance.faction-tab--active {
+  border-color: var(--alliance-blue);
+  color: #93c5fd;
+  background: rgba(30, 64, 175, 0.15);
+}
+
+.faction-tab--horde.faction-tab--active {
+  border-color: var(--horde-red);
+  color: #fca5a5;
+  background: rgba(153, 27, 27, 0.15);
+}
+
+/* ── Race Grid ────────────────────────────────────────────────── */
+
+.race-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.75rem;
+  width: 100%;
 }
 
 .race-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: 8px;
-  padding: 1.5rem 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
+  background: var(--bg-card);
+  padding: 1rem;
+  text-align: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .race-card:hover {
-  background: var(--bg-card-hover);
   border-color: var(--border-bright);
-  transform: translateY(-1px);
+  background: var(--bg-card-hover);
 }
 
-.race-card__icon {
-  font-size: 2rem;
+.race-card--selected {
+  border-color: var(--gold-dim);
+  background: rgba(212, 168, 67, 0.08);
 }
 
 .race-card__name {
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.race-card__class-count {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
+/* ── Class Grid ───────────────────────────────────────────────── */
 
-/* ── Class Select ─────────────────────────────────────────────── */
-
-.class-select__title {
-  font-family: var(--font-display);
-  font-size: 1.3rem;
-  color: var(--text-primary);
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-}
-
-.class-select__race-badge {
-  font-size: 0.8rem;
-  color: var(--gold);
-  font-family: var(--font-body);
-}
-
-.class-select__grid {
+.class-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+  width: 100%;
 }
 
 .class-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: 8px;
-  padding: 1.2rem;
+  background: var(--bg-card);
+  padding: 1rem;
   cursor: pointer;
-  transition: all 0.2s;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.4rem;
+  transition: all 0.15s;
 }
 
 .class-card:hover {
+  border-color: var(--border-bright);
   background: var(--bg-card-hover);
+}
+
+.class-card--selected {
   border-color: var(--gold-dim);
-  transform: translateY(-1px);
-}
-
-.class-card__header {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.class-card__icon {
-  font-size: 1.4rem;
+  background: rgba(212, 168, 67, 0.08);
 }
 
 .class-card__name {
@@ -507,85 +424,66 @@ body {
   min-width: 220px;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.5rem;
   backdrop-filter: blur(8px);
   z-index: 10;
 }
 
-.player-hud__identity {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.2rem;
-}
-
-.player-hud__faction-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
 .player-hud__name {
   font-family: var(--font-display);
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   color: var(--gold);
 }
 
-.player-hud__meta {
-  font-size: 0.7rem;
+.player-hud__info {
+  font-size: 0.72rem;
   color: var(--text-muted);
-  margin-left: auto;
 }
 
-.player-hud__bar-row {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.player-hud__bar-label {
-  font-size: 0.6rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  width: 20px;
-  text-align: right;
-  font-family: var(--font-mono);
-}
-
-.player-hud__bar-track {
-  flex: 1;
-  height: 10px;
+.player-hud__bar {
+  height: 14px;
   background: #1a1d28;
-  border-radius: 3px;
+  border-radius: 4px;
   overflow: hidden;
+  position: relative;
   border: 1px solid var(--border);
 }
 
 .player-hud__bar-fill {
   height: 100%;
-  border-radius: 2px;
-  transition: width 0.2s ease;
+  border-radius: 3px;
+  transition: width 0.25s ease;
 }
 
 .player-hud__bar-fill--hp {
   background: linear-gradient(90deg, #16a34a, #22c55e);
 }
 
-.player-hud__bar-value {
-  font-size: 0.65rem;
-  color: var(--text-muted);
+.player-hud__bar-fill--mana {
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+}
+
+.player-hud__bar-fill--xp {
+  background: linear-gradient(90deg, #7c3aed, #a78bfa);
+}
+
+.player-hud__bar-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.58rem;
   font-family: var(--font-mono);
-  min-width: 52px;
-  text-align: right;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  white-space: nowrap;
 }
 
 .player-hud__coords {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
-  margin-top: 0.2rem;
 }
 
 /* ── Target Panel ─────────────────────────────────────────────── */
@@ -593,7 +491,7 @@ body {
 .target-panel {
   position: absolute;
   top: 12px;
-  right: 12px;
+  left: 250px;
   background: rgba(15, 17, 24, 0.92);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -616,7 +514,7 @@ body {
   font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--danger);
+  color: var(--text-primary);
 }
 
 .target-panel__close {
@@ -684,6 +582,23 @@ body {
 
 .target-panel__attack-btn:hover {
   background: linear-gradient(135deg, #991b1b, #b91c1c);
+}
+
+.target-panel__interact-btn {
+  margin-top: 0.3rem;
+  background: linear-gradient(135deg, #1e3a5f, #2563eb);
+  border: 1px solid #3b82f6;
+  border-radius: 5px;
+  padding: 0.4rem 0.8rem;
+  color: #93c5fd;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.target-panel__interact-btn:hover {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
 }
 
 /* ── Object Panel ─────────────────────────────────────────────── */
@@ -872,8 +787,6 @@ body {
   z-index: 10;
   pointer-events: none;
 }
-
-
 
 .hud-overlay {
   z-index: 999999 !important;

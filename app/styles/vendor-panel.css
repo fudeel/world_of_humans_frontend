@@ -1,0 +1,217 @@
+/* app/styles/vendor-panel.css */
+/* Styles for the vendor buy/sell panel and its sub-components. */
+
+/* ── Vendor Panel ─────────────────────────────────────────────── */
+
+.vendor-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 620px;
+    max-height: 85vh;
+    background: rgba(15, 17, 24, 0.96);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    z-index: 25;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+}
+
+.vendor-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.vendor-panel__title {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--gold);
+}
+
+.vendor-panel__close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.vendor-panel__close:hover {
+    color: var(--text-primary);
+}
+
+.vendor-panel__body {
+    display: flex;
+    gap: 1px;
+    flex: 1;
+    overflow: hidden;
+    background: var(--border);
+}
+
+.vendor-panel__stock,
+.vendor-panel__sell {
+    flex: 1;
+    background: rgba(15, 17, 24, 0.96);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.vendor-panel__section-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.5rem 0.7rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.vendor-panel__vendor-gold {
+    font-size: 0.7rem;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.vendor-panel__stock-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.vendor-panel__sell-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding: 0.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.vendor-panel__empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    padding: 1.5rem 0;
+}
+
+.vendor-panel__footer {
+    padding: 0.4rem 1rem;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+}
+
+/* ── Vendor Item Slot (buy row) ───────────────────────────────── */
+
+.vendor-item-slot {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+    position: relative;
+    transition: all 0.12s;
+}
+
+.vendor-item-slot:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--border);
+}
+
+.vendor-item-slot__icon {
+    font-size: 1.1rem;
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.vendor-item-slot__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.vendor-item-slot__name {
+    font-family: var(--font-display);
+    font-size: 0.76rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vendor-item-slot__qty {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+}
+
+.vendor-item-slot__price {
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    color: #c2702a;
+    flex-shrink: 0;
+    min-width: 40px;
+    text-align: right;
+}
+
+.vendor-item-slot__buy {
+    background: linear-gradient(135deg, #1e3a5f, #2563eb);
+    border: 1px solid #3b82f6;
+    border-radius: 4px;
+    padding: 0.25rem 0.55rem;
+    color: #93c5fd;
+    font-size: 0.68rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.vendor-item-slot__buy:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+}
+
+.vendor-item-slot__buy--disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.vendor-item-slot__tooltip {
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10, 12, 18, 0.97);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+    min-width: 190px;
+    z-index: 35;
+    pointer-events: none;
+}
+
+/* ── Sellable inventory slot highlight ────────────────────────── */
+
+.inv-slot--sellable:hover {
+    box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.4);
+}

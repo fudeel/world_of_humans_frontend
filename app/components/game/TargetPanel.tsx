@@ -1,6 +1,6 @@
 // app/components/game/TargetPanel.tsx
 // Displays information about the currently selected/targeted entity.
-// Shows attack for hostile mobs, and interact for quest givers.
+// Shows attack for hostile mobs, talk for quest givers, and shop for vendors.
 
 "use client";
 
@@ -29,12 +29,15 @@ export default function TargetPanel({
     const displayName = target.mob_name ?? target.name;
     const isMob = !!target.mob_name;
     const isQuestGiver = !!target.is_quest_giver;
+    const isVendor = !!target.is_vendor;
+    const isNpc = isQuestGiver || isVendor;
 
     return (
         <div className="target-panel">
             <div className="target-panel__header">
                 <span className="target-panel__name">
-                    {isQuestGiver && "📜 "}
+                    {isVendor && "🏪 "}
+                    {isQuestGiver && !isVendor && "📜 "}
                     {displayName}
                 </span>
                 <button className="target-panel__close" onClick={onDeselect}>
@@ -50,6 +53,9 @@ export default function TargetPanel({
                 {isQuestGiver && (
                     <span className="target-panel__state"> — Quest Giver</span>
                 )}
+                {isVendor && (
+                    <span className="target-panel__state"> — Vendor</span>
+                )}
             </div>
 
             <div className="target-panel__hp-row">
@@ -64,19 +70,19 @@ export default function TargetPanel({
                 </span>
             </div>
 
-            {isMob && target.is_alive && isQuestGiver && (
+            {isMob && target.is_alive && isNpc && (
                 inRange ? (
                     <button className="target-panel__interact-btn" onClick={onInteractNpc}>
-                        📜 Talk
+                        {isVendor ? "🏪 Shop" : "📜 Talk"}
                     </button>
                 ) : (
                     <div className="target-panel__out-of-range">
-                        Move closer to talk
+                        Move closer to interact
                     </div>
                 )
             )}
 
-            {isMob && target.is_alive && !isQuestGiver && (
+            {isMob && target.is_alive && !isNpc && (
                 inRange ? (
                     <button className="target-panel__attack-btn" onClick={onAttack}>
                         ⚔ Attack

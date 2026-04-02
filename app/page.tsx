@@ -1,7 +1,7 @@
 // app/page.tsx
 // Main entry point: connects to the Python game server via WebSocket,
 // guides the player through character creation, then renders a real
-// Leaflet map with entity interaction, loot, quests, and inventory.
+// Leaflet map with entity interaction, loot, quests, vendor, and inventory.
 
 "use client";
 
@@ -18,6 +18,7 @@ import InventoryPanel from "@/app/components/game/InventoryPanel";
 import QuestLogPanel from "@/app/components/game/QuestLogPanel";
 import QuestOfferPanel from "@/app/components/game/QuestOfferPanel";
 import LootWindow from "@/app/components/game/LootWindow";
+import VendorPanel from "@/app/components/game/VendorPanel";
 import NotificationToast from "@/app/components/game/NotificationToast";
 import ExperienceToast from "@/app/components/game/ExperienceToast";
 import LevelUpNotification from "@/app/components/game/LevelUpNotification";
@@ -68,6 +69,11 @@ export default function Home() {
         openLootDrop,
         closeLootDrop,
         closeQuestOffer,
+        vendorData,
+        vendorOpen,
+        vendorBuy,
+        vendorSell,
+        closeVendor,
         clearError,
         clearNotification,
         experience,
@@ -155,6 +161,7 @@ export default function Home() {
                 setShowQuestLog(false);
                 closeLootDrop();
                 closeQuestOffer();
+                closeVendor();
                 setSelectedEntityId(null);
                 setSelectedObjectId(null);
                 return;
@@ -195,7 +202,7 @@ export default function Home() {
             }
             keysRef.current.clear();
         };
-    }, [phase, processMovement, closeLootDrop, closeQuestOffer]);
+    }, [phase, processMovement, closeLootDrop, closeQuestOffer, closeVendor]);
 
     /* ── Connecting ──────────────────────────────────────────────── */
     if (phase === "connecting") {
@@ -291,7 +298,8 @@ export default function Home() {
                     {selectedEntity && (
                         <TargetPanel
                             target={selectedEntity}
-                            inRange={selectedEntity.is_quest_giver ? isNpcInRange : isTargetInRange}
+                            inRange={selectedEntity.is_quest_giver || selectedEntity.is_vendor
+                                ? isNpcInRange : isTargetInRange}
                             onAttack={() => attackTarget(selectedEntity.entity_id)}
                             onInteractNpc={() => interactNpc(selectedEntity.entity_id)}
                             onDeselect={() => setSelectedEntityId(null)}
@@ -323,6 +331,18 @@ export default function Home() {
                             offer={questOffer}
                             onAccept={acceptQuest}
                             onClose={closeQuestOffer}
+                        />
+                    )}
+
+                    {/* Vendor panel */}
+                    {vendorOpen && vendorData && inventory && currency && (
+                        <VendorPanel
+                            vendor={vendorData}
+                            inventory={inventory}
+                            currency={currency}
+                            onBuy={vendorBuy}
+                            onSell={vendorSell}
+                            onClose={closeVendor}
                         />
                     )}
 
